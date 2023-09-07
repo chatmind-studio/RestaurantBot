@@ -59,7 +59,7 @@ class ItemCard(ft.UserControl):
                         ft.Column(
                             [
                                 ft.Text(
-                                    f"{self.item.category}/{self.item.name}",
+                                    f"{self.item.category.value}/{self.item.name}",
                                     size=22,
                                     weight=ft.FontWeight.W_700,
                                 ),
