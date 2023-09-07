@@ -1,11 +1,14 @@
 import asyncio
+import os
 
 import flet as ft
+from dotenv import load_dotenv
 from tortoise import Tortoise
 
-from restaurant_bot.models import Item
-from restaurant_bot.web_app.item_card import ItemCard
-from restaurant_bot.web_app.item_form import ItemForm
+from restaurant_bot.models import Coupon, Item
+from restaurant_bot.web_app import CouponCard, CouponForm, ItemCard, ItemForm, LoginForm
+
+load_dotenv()
 
 ROUTES = {
     0: "/items",
@@ -14,19 +17,25 @@ ROUTES = {
 
 
 async def main(page: ft.Page):
-    async def on_click(_: ft.ControlEvent):
-        page.views.append(ft.View(controls=[ItemForm()]))
-        await page.update_async()
+    async def on_click(e: ft.ControlEvent):
+        if e.page.route == "/items":
+            page.views.append(ft.View(controls=[ItemForm()]))
+            await page.update_async()
+        elif e.page.route == "/coupons":
+            page.views.append(ft.View(controls=[CouponForm()]))
+            await page.update_async()
 
     async def on_route_change(e: ft.RouteChangeEvent):
         page.controls = []
-        page.controls.append(
-            ft.FloatingActionButton(icon=ft.icons.ADD, on_click=on_click)
-        )
-        if e.route == "/items/refresh":
-            return await page.go_async("/items")
 
-        if e.route == "/items":
+        if not e.page.session.get("authed"):
+            page.views.append(ft.View(controls=[LoginForm()]))
+            await page.update_async()
+            return
+
+        if e.route == "/items/refresh":
+            await page.go_async("/items")
+        elif e.route == "/items":
             items = await Item.all()
             if not items:
                 return page.controls.append(
@@ -36,13 +45,30 @@ async def main(page: ft.Page):
                     )
                 )
 
-            grid = ft.ListView(expand=True, spacing=12)
+            list_view = ft.ListView(expand=True, spacing=12)
             for item in reversed(items):
                 card = ItemCard(item)
-                grid.controls.append(card)
-            page.controls.append(grid)
+                list_view.controls.append(card)
+            page.controls.append(list_view)
+            await page.update_async()
+        elif e.route == "/coupons/refresh":
+            await page.go_async("/coupons")
+        elif e.route == "/coupons":
+            coupons = await Coupon.all()
+            if not coupons:
+                return page.controls.append(
+                    ft.Container(
+                        ft.Text("目前沒有任何優惠卷, 點擊右下角按鈕新增優惠卷"),
+                        alignment=ft.alignment.center,
+                    )
+                )
 
-        await page.update_async()
+            list_view = ft.ListView(expand=True, spacing=12)
+            for coupon in reversed(coupons):
+                card = CouponCard(coupon)
+                list_view.controls.append(card)
+            page.controls.append(list_view)
+            await page.update_async()
 
     async def on_change(e: ft.ControlEvent):
         await e.page.go_async(ROUTES[e.control.selected_index])
@@ -64,18 +90,21 @@ async def main(page: ft.Page):
         ],
         on_change=on_change,
     )
+    page.floating_action_button = ft.FloatingActionButton(
+        icon=ft.icons.ADD, on_click=on_click
+    )
     await page.go_async("/items")
 
 
 loop = asyncio.get_event_loop()
 loop.run_until_complete(
     Tortoise.init(
-        db_url="sqlite://db.sqlite3",
+        db_url=os.getenv("DB_URL") or "sqlite://db.sqlite3",
         modules={"models": ["restaurant_bot.models"]},
     )
 )
 loop.run_until_complete(Tortoise.generate_schemas())
-ft.app(target=main, port=5000, upload_dir="uploads")
+ft.app(target=main, port=7031)
 
 
 loop = asyncio.get_event_loop()
