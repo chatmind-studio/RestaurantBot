@@ -15,8 +15,14 @@ class AccountCog(Cog):
 
     @command
     async def account(self, ctx: Context) -> Any:
-        profile = await ctx.api.get_profile(ctx.user_id)
-        user, _ = await User.get_or_create(id=ctx.user_id, name=profile.display_name)
+        user = await User.get_or_none(id=ctx.user_id)
+        if user is None:
+            profile = await self.bot.line_bot_api.get_profile(ctx.user_id)
+            user = await User.create(
+                id=ctx.user_id,
+                name=profile.display_name,
+            )
+
         await user.fetch_related("coupons")
         actions = [
             PostbackAction(
@@ -48,9 +54,7 @@ class AccountCog(Cog):
 
     @command
     async def show_coupons(self, ctx: Context, index: int = 0) -> Any:
-        user = await User.filter(id=ctx.user_id).first()
-        if not user:
-            return
+        user = await User.get(id=ctx.user_id)
         all_coupons = list(set(user.coupons))
         split_coupons = split_list(all_coupons, 11)
         items: List[QuickReplyItem] = []
