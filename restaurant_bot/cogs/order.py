@@ -178,27 +178,58 @@ class OrderCog(Cog):
 
     @command
     async def remove_item(
-        self, ctx: Context, item_id: Optional[int] = None, amount: Optional[int] = None
+        self,
+        ctx: Context,
+        index: int = 0,
+        item_id: Optional[int] = None,
+        amount: Optional[int] = None,
     ) -> Any:
         user = await User.get(id=ctx.user_id)
         if item_id is None:
             cart = await Cart().create(user.cart)
+            split_cart_items = split_list(cart.items, 11)
+            quick_reply_items: List[QuickReplyItem] = []
+            if index > 0:
+                quick_reply_items.append(
+                    QuickReplyItem(
+                        PostbackAction(
+                            "上一頁",
+                            f"cmd=remove_item&index={index-1}",
+                        )
+                    )
+                )
+            for item in split_cart_items[index]:
+                quick_reply_items.append(
+                    QuickReplyItem(
+                        PostbackAction(
+                            item.name,
+                            f"cmd=remove_item&item_id={item.id}&amount=",
+                            fill_in_text=f"cmd=remove_item&item_id={item.id}&amount=",
+                            input_option="openKeyboard",
+                            display_text="請輸入要刪除的餐點數量, 不輸入則刪除全部\n(請勿更動前面的英文指令)",
+                        )
+                    )
+                )
+            if index > 0:
+                quick_reply_items.insert(
+                    0,
+                    QuickReplyItem(
+                        action=PostbackAction(
+                            label="上一頁", data=f"cmd=remove_item&index={index-1}"
+                        )
+                    ),
+                )
+            if index < len(split_cart_items) - 1:
+                quick_reply_items.append(
+                    QuickReplyItem(
+                        action=PostbackAction(
+                            label="下一頁", data=f"cmd=remove_item&index={index+1}"
+                        )
+                    )
+                )
             await ctx.reply_text(
                 "請選擇要刪除的餐點",
-                quick_reply=QuickReply(
-                    [
-                        QuickReplyItem(
-                            PostbackAction(
-                                "ignore",
-                                item.name,
-                                fill_in_text=f"cmd=remove_item&item_id={item.id}&amount=",
-                                input_option="openKeyboard",
-                                display_text="請輸入要刪除的餐點數量, 不輸入則刪除全部\n(請勿更動前面的英文指令)",
-                            )
-                        )
-                        for item in cart.items
-                    ]
-                ),
+                quick_reply=QuickReply(quick_reply_items),
             )
         else:
             cart = await Cart().create(user.cart)
