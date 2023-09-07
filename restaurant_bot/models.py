@@ -1,4 +1,4 @@
-from enum import StrEnum
+from enum import Enum
 from typing import List, Optional
 
 from tortoise import fields
@@ -22,7 +22,7 @@ class User(Model):
     coupon_ids: List[int] = fields.JSONField(default=[])  # type: ignore
 
 
-class ItemCategory(StrEnum):
+class ItemCategory(Enum):
     FOOD = "食物"
     DRINK = "飲料"
     DESSERT = "甜點"
