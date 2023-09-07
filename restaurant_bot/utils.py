@@ -43,3 +43,7 @@ async def upload_image(image: Image) -> str:
 
 def get_now() -> datetime.datetime:
     return datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=8)))
+
+
+def get_today() -> datetime.date:
+    return get_now().date()
