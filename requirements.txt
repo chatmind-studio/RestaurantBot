@@ -1,7 +1,5 @@
-aioimgur
 asyncpg
 line.py @ git+https://github.com/seriaati/line.py
-nicegui
 tortoise-orm
 qrcode
 Pillow
