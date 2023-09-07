@@ -13,11 +13,10 @@ async def main() -> None:
     if not (channel_secret and access_token):
         raise RuntimeError("LINE_CHANNEL_SECRET and LINE_ACCESS_TOKEN are required.")
 
-    db_url = os.getenv("DATABASE_URL")
-    if not db_url:
-        raise RuntimeError("DATABASE_URL is required.")
-    bot = RestaurantBot(channel_secret, access_token, db_url)
-    await bot.run()
+    bot = RestaurantBot(
+        channel_secret, access_token, os.getenv("DB_URL") or "sqlite://db.sqlite3"
+    )
+    await bot.run(port=7030, custom_route="/restaurant/line")
 
 
 asyncio.run(main())
