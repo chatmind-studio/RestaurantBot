@@ -40,7 +40,3 @@ async def upload_image(image: Image) -> str:
             return (await resp.json())["image"]["url"]
 
 
-def shorten_text(text: str, max_length: int) -> str:
-    if len(text) > max_length:
-        return text[:max_length] + "..."
-    return text
