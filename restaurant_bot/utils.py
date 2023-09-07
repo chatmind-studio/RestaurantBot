@@ -1,4 +1,5 @@
 import base64
+import datetime
 import io
 from typing import List, TypeVar
 
@@ -40,3 +41,5 @@ async def upload_image(image: Image) -> str:
             return (await resp.json())["image"]["url"]
 
 
+def get_now() -> datetime.datetime:
+    return datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=8)))
