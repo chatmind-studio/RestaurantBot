@@ -1,4 +1,5 @@
 from enum import StrEnum
+from typing import List
 
 from tortoise import fields
 from tortoise.models import Model
@@ -21,6 +22,7 @@ class User(Model):
     )
     is_admin = fields.BooleanField(default=False)
     password = fields.CharField(max_length=255, null=True, default=None)
+    cart: List[int] = fields.JSONField(default=[])  # type: ignore
 
 
 class ItemCategory(StrEnum):
