@@ -104,15 +104,14 @@ class AccountCog(Cog):
             image_url = await upload_image(image)
             return await ctx.reply_image(image_url)
 
-        user = await User.filter(id=user_id).first()
-        if not user:
-            return
-        admin = await User.filter(id=ctx.user_id).first()
-        if not admin or not admin.is_admin:
-            return
+        user_to_give_point = await User.get(id=user_id)
+        command_user = await User.get(id=ctx.user_id)
+        if not command_user.is_admin:
+            return await ctx.reply_text(text="你不是管理員")
+
         template = ButtonsTemplate(
-            title=f"你好, {admin.name}",
-            text=f"點擊下方的按鈕後, 輸入要給予 {user.name} 的點數數量",
+            title=f"你好, {command_user.name}",
+            text=f"點擊下方的按鈕後, 輸入要給予 {user_to_give_point.name} 的點數數量",
             actions=[
                 PostbackAction(
                     label="輸入點數",
@@ -123,16 +122,17 @@ class AccountCog(Cog):
                 ),
             ],
         )
-        await ctx.reply_template(alt_text=f"要給予 {user.name} 多少點?", template=template)
+        await ctx.reply_template(
+            alt_text=f"要給予 {user_to_give_point.name} 多少點?", template=template
+        )
 
     @command
     async def give_points(self, ctx: Context, user_id: str, points: int) -> Any:
-        user = await User.filter(id=user_id).first()
-        if not user:
-            return
-        admin = await User.filter(id=ctx.user_id).first()
-        if not admin or not admin.is_admin:
-            return
-        user.points += points
-        await user.save()
-        await ctx.reply_text(text=f"成功, 已給予 {user.name} {points} 點")
+        user_to_give_point = await User.get(id=user_id)
+        command_user = await User.get(id=ctx.user_id)
+        if not command_user.is_admin:
+            return await ctx.reply_text(text="你不是管理員")
+
+        user_to_give_point.points += points
+        await user_to_give_point.save()
+        await ctx.reply_text(text=f"成功, 已給予 {user_to_give_point.name} {points} 點")
