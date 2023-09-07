@@ -1,21 +1,21 @@
+import datetime
 from typing import Optional
 
 import flet as ft
 
-from ..models import Item, ItemCategory
+from ..models import Coupon
+from ..utils import get_now
 
 
-class ItemForm(ft.UserControl):
-    def __init__(self, *, is_create: bool = True, item: Optional[Item] = None) -> None:
+class CouponForm(ft.UserControl):
+    def __init__(self, *, is_create: bool = True, coupon: Optional[Coupon] = None):
         super().__init__()
         self.name = ft.Ref[ft.TextField]()
         self.description = ft.Ref[ft.TextField]()
-        self.category = ft.Ref[ft.Dropdown]()
-        self.price = ft.Ref[ft.TextField]()
-        self.image_url = ft.Ref[ft.TextField]()
+        self.expire_date = ft.Ref[ft.TextField]()
 
         self.is_create = is_create
-        self.item = item
+        self.coupon = coupon
 
     @staticmethod
     async def cancel(e: ft.ControlEvent) -> None:
@@ -34,40 +34,42 @@ class ItemForm(ft.UserControl):
     async def submit(self, e: ft.ControlEvent) -> None:
         name = self.name.current
         description = self.description.current
-        price = self.price.current
-        category = self.category.current
-        image_url = self.image_url.current
+        expire_date = self.expire_date.current
+        if name.error_text or description.error_text or expire_date.error_text:
+            return
+        if not (name.value and description.value and expire_date.value):
+            return
+        try:
+            converted_expire_date = datetime.datetime.strptime(
+                expire_date.value, "%Y/%m/%d"
+            ).date()
+        except ValueError:
+            expire_date.error_text = "日期格式錯誤"
+            await expire_date.update_async()
+            return
 
-        if name.error_text or description.error_text or price.error_text:
-            return
-        if not (name.value and description.value and price.value and category.value):
-            return
-        if not price.value.isdigit():
-            price.error_text = "價格必須是數字"
-            await price.update_async()
+        if converted_expire_date < get_now().date():
+            expire_date.error_text = "到期日必須是未來的日期"
+            await expire_date.update_async()
             return
 
         if self.is_create:
-            await Item.create(
+            await Coupon.create(
                 name=name.value,
                 description=description.value,
-                price=int(price.value),
-                category=ItemCategory(category.value),
-                image_url=image_url.value,
+                expire_date=converted_expire_date,
             )
         else:
-            assert self.item
-            await Item.filter(id=self.item.id).update(
+            assert self.coupon
+            await Coupon.filter(id=self.coupon.id).update(
                 name=name.value,
                 description=description.value,
-                price=int(price.value),
-                category=ItemCategory(category.value),
-                image_url=image_url.value,
+                expire_date=converted_expire_date,
             )
 
         e.page.views.pop()
         await e.page.update_async()
-        await e.page.go_async("/items/refresh")
+        await e.page.go_async("/coupons/refresh")
 
     def build(self):
         return ft.SafeArea(
@@ -80,7 +82,7 @@ class ItemForm(ft.UserControl):
                                     ft.icons.ARROW_BACK, on_click=self.cancel
                                 ),
                                 ft.Text(
-                                    "新增餐點" if self.is_create else "編輯餐點",
+                                    "新增優惠卷" if self.is_create else "編輯優惠卷",
                                     size=24,
                                     weight=ft.FontWeight.W_700,
                                 ),
@@ -93,11 +95,11 @@ class ItemForm(ft.UserControl):
                                         ref=self.name,
                                         label="名稱",
                                         max_length=20,
-                                        hint_text="起司火腿堡, 起司蛋餅...",
+                                        hint_text="買一送一, 第二件飲品五折...",
                                         autofocus=True,
                                         icon=ft.icons.TITLE,
                                         on_blur=self.validate_required_field,
-                                        value=self.item.name if self.item else None,
+                                        value=self.coupon.name if self.coupon else None,
                                     ),
                                     ft.TextField(
                                         ref=self.description,
@@ -105,43 +107,23 @@ class ItemForm(ft.UserControl):
                                         multiline=True,
                                         max_length=50,
                                         keyboard_type=ft.KeyboardType.MULTILINE,
-                                        hint_text="柔軟的麵包, 搭配融化的起司...\n(可換行)",
+                                        hint_text="需滿額 300 元才可使用...\n(可換行)",
                                         icon=ft.icons.DESCRIPTION,
                                         on_blur=self.validate_required_field,
-                                        value=self.item.description
-                                        if self.item
+                                        value=self.coupon.description
+                                        if self.coupon
                                         else None,
                                     ),
-                                    ft.Dropdown(
-                                        ref=self.category,
-                                        icon=ft.icons.CATEGORY,
-                                        label="類別",
-                                        options=[
-                                            ft.dropdown.Option(c.value)
-                                            for c in ItemCategory
-                                        ],
-                                        value=self.item.category.value
-                                        if self.item
-                                        else ItemCategory.FOOD.value,
-                                    ),
                                     ft.TextField(
-                                        ref=self.price,
-                                        icon=ft.icons.ATTACH_MONEY,
-                                        label="價格",
-                                        keyboard_type=ft.KeyboardType.NUMBER,
-                                        prefix_text="NT$",
+                                        ref=self.expire_date,
+                                        label="到期日",
+                                        hint_text="2023/12/31",
+                                        icon=ft.icons.CALENDAR_TODAY,
                                         on_blur=self.validate_required_field,
-                                        value=str(self.item.price)
-                                        if self.item
-                                        else None,
-                                    ),
-                                    ft.TextField(
-                                        ref=self.image_url,
-                                        icon=ft.icons.IMAGE,
-                                        label="圖片網址",
-                                        hint_text="https://i.ibb.co/h7sVKj2/image.png",
-                                        value=self.item.image_url
-                                        if self.item
+                                        value=self.coupon.expire_date.strftime(
+                                            "%Y/%m/%d"
+                                        )
+                                        if self.coupon
                                         else None,
                                     ),
                                 ],
