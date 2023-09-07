@@ -104,7 +104,7 @@ loop.run_until_complete(
     )
 )
 loop.run_until_complete(Tortoise.generate_schemas())
-ft.app(target=main, port=7031)
+ft.app(target=main, port=7031, view=None)
 
 
 loop = asyncio.get_event_loop()
