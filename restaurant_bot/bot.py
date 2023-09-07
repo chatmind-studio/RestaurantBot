@@ -33,7 +33,7 @@ class RestaurantBot(Bot):
         await self._setup_rich_menu()
         logging.info("Setting up database")
         await Tortoise.init(
-            db_url="sqlite://db.sqlite3",
+            db_url=self.db_url,
             modules={"models": ["restaurant_bot.models"]},
         )
         await Tortoise.generate_schemas()
