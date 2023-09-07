@@ -193,7 +193,7 @@ class OrderCog(Cog):
                 quick_reply_items.append(
                     QuickReplyItem(
                         PostbackAction(
-                            data=f"cmd=remove_item&item_id={item.id}&amount=",
+                            data="cmd=ignore",
                             label=item.name,
                             fill_in_text=f"cmd=remove_item&item_id={item.id}&amount=",
                             input_option="openKeyboard",
