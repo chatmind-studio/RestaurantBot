@@ -189,15 +189,6 @@ class OrderCog(Cog):
             cart = await Cart().create(user.cart)
             split_cart_items = split_list(cart.items, 11)
             quick_reply_items: List[QuickReplyItem] = []
-            if index > 0:
-                quick_reply_items.append(
-                    QuickReplyItem(
-                        PostbackAction(
-                            "上一頁",
-                            f"cmd=remove_item&index={index-1}",
-                        )
-                    )
-                )
             for item in split_cart_items[index]:
                 quick_reply_items.append(
                     QuickReplyItem(
@@ -210,6 +201,7 @@ class OrderCog(Cog):
                         )
                     )
                 )
+
             if index > 0:
                 quick_reply_items.insert(
                     0,
