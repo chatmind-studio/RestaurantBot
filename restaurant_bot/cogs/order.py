@@ -193,8 +193,8 @@ class OrderCog(Cog):
                 quick_reply_items.append(
                     QuickReplyItem(
                         PostbackAction(
-                            item.name,
-                            f"cmd=remove_item&item_id={item.id}&amount=",
+                            data=f"cmd=remove_item&item_id={item.id}&amount=",
+                            label=item.name,
                             fill_in_text=f"cmd=remove_item&item_id={item.id}&amount=",
                             input_option="openKeyboard",
                             display_text="請輸入要刪除的餐點數量, 不輸入則刪除全部\n(請勿更動前面的英文指令)",
