@@ -27,7 +27,7 @@ class Cart:
         if not item_ids:
             self.display_text = "你目前尚未點選任何餐點"
             self.quick_reply = QuickReply(
-                [QuickReplyItem(PostbackAction("cmd=order", "點餐"))]
+                [QuickReplyItem(PostbackAction("點餐", data="cmd=order"))]
             )
             return self
         for cart_item_id in set(item_ids):
@@ -43,12 +43,14 @@ class Cart:
         self.quick_reply = QuickReply(
             items=[
                 QuickReplyItem(
-                    PostbackAction("cmd=checkout", "結帳", display_text="請前往櫃台並向店員出示手機畫面")
+                    PostbackAction(
+                        "結帳", data="cmd=checkout", display_text="請前往櫃台並向店員出示手機畫面"
+                    )
                 ),
                 QuickReplyItem(
-                    PostbackAction("cmd=order&is_continue_order=true", "繼續點餐")
+                    PostbackAction("繼續點餐", data="cmd=order&is_continue_order=true")
                 ),
-                QuickReplyItem(PostbackAction("cmd=remove_item", "刪除餐點")),
+                QuickReplyItem(PostbackAction("刪除餐點", data="cmd=remove_item")),
             ]
         )
         return self
@@ -76,18 +78,18 @@ class OrderCog(Cog):
             template = ConfirmTemplate(
                 "系統偵測到你有尚未結帳的餐點, 是否要繼續點餐?",
                 actions=[
-                    PostbackAction("cmd=continue_order", "繼續點餐"),
-                    PostbackAction("cmd=checkout", "結帳"),
+                    PostbackAction("繼續點餐", data="cmd=continue_order"),
+                    PostbackAction("結帳", data="cmd=checkout"),
                 ],
             )
-            return await ctx.reply_template("點餐", template)
+            return await ctx.reply_template("點餐", template=template)
 
         if not item_category:
             quick_reply_items = [
                 QuickReplyItem(
                     PostbackAction(
-                        f"cmd=order&is_continue_order=true&item_category={category.value}",
                         category.value,
+                        data=f"cmd=order&is_continue_order=true&item_category={category.value}",
                     )
                 )
                 for category in ItemCategory
@@ -130,7 +132,7 @@ class OrderCog(Cog):
             templates.append(CarouselTemplate(columns=columns))
 
         await ctx.reply_multiple(
-            [TemplateMessage("點餐", template) for template in templates]
+            [TemplateMessage("點餐", template=template) for template in templates]
         )
 
     @command
@@ -139,12 +141,12 @@ class OrderCog(Cog):
     ) -> Any:
         await ctx.reply_template(
             "確認點餐",
-            ConfirmTemplate(
+            template=ConfirmTemplate(
                 f"確定要點 {amount} 份的 {item_name} 嗎?\n這樣一共是 {item_price * amount} 元",
-                actions=[
-                    PostbackAction(label="取消", data="cmd=order", display_text="已取消"),
+                [
+                    PostbackAction("取消", data="cmd=order", display_text="已取消"),
                     PostbackAction(
-                        label="確定",
+                        "確定",
                         data=f"cmd=order_item&item_id={item_id}&amount={amount}",
                     ),
                 ],

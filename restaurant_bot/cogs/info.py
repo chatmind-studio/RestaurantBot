@@ -11,7 +11,7 @@ class InfoCog(Cog):
     @command
     async def shop_info(self, ctx: Context) -> Any:
         await ctx.reply_template(
-            alt_text="店家資訊",
+            "店家資訊",
             template=ButtonsTemplate(
                 title="麥當勞-高雄博愛二餐廳",
                 text="地址: 813高雄市左營區博愛三路225號\n營業時間: 7:00~21:30, 週二公休",
@@ -28,7 +28,7 @@ class InfoCog(Cog):
     @command
     async def reservation(self, ctx: Context) -> Any:
         await ctx.reply_template(
-            alt_text="訂位",
+            "訂位",
             template=ButtonsTemplate(
                 title="訂位",
                 text="目前採電話定位制",
