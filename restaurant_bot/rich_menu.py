@@ -1,4 +1,4 @@
-from line.models import MessageAction
+from line.models import PostbackAction
 from linebot.v3.messaging import (
     RichMenuArea,
     RichMenuBounds,
@@ -14,19 +14,19 @@ RICH_MENU = RichMenuRequest(
     areas=[
         RichMenuArea(
             bounds=RichMenuBounds(x=0, y=0, width=600, height=405),
-            action=MessageAction(text="cmd=order", label="點餐"),
+            action=PostbackAction(data="cmd=order", label="點餐"),
         ),
         RichMenuArea(
             bounds=RichMenuBounds(x=600, y=0, width=600, height=405),
-            action=MessageAction(text="cmd=shop_info", label="店家資訊"),
+            action=PostbackAction(data="cmd=shop_info", label="店家資訊"),
         ),
         RichMenuArea(
             bounds=RichMenuBounds(x=0, y=405, width=600, height=405),
-            action=MessageAction(text="cmd=reservation", label="訂位"),
+            action=PostbackAction(data="cmd=reservation", label="訂位"),
         ),
         RichMenuArea(
             bounds=RichMenuBounds(x=600, y=405, width=600, height=405),
-            action=MessageAction(text="cmd=account", label="會員"),
+            action=PostbackAction(data="cmd=account", label="會員"),
         ),
     ],
 )
